@@ -1,5 +1,11 @@
 # Google Maps to WhatsApp Sender
 
+![PHP Version](https://img.shields.io/badge/PHP-8.3-blue)
+![License](https://img.shields.io/github/license/victoratsuta/google_map2whatsapp)
+![Stars](https://img.shields.io/github/stars/victoratsuta/google_map2whatsapp?style=social)
+![Issues](https://img.shields.io/github/issues/victoratsuta/google_map2whatsapp)
+![Last Commit](https://img.shields.io/github/last-commit/victoratsuta/google_map2whatsapp)
+
 ## 🚀 Overview
 
 Google Maps to WhatsApp Sender is a powerful CLI tool that automates the process of finding businesses on Google Maps and sending them WhatsApp messages. This tool is perfect for travelers, sales representatives, or anyone who needs to contact multiple businesses efficiently.
@@ -187,9 +193,3 @@ This project is based on the [go-clean-template](https://github.com/evrone/go-cl
 - [ ] Check if we do pagination for search results, because now its maximum 2o companies per page
 - [ ] Add progress bar for message sending
 - [ ] Implement proper error handling and retries
-
-## 🙏 Acknowledgments
-
-- Clean Architecture example by [@evrone](https://github.com/evrone/go-clean-template)
-- Google Maps API documentation
-- WhatsApp Web API documentation
