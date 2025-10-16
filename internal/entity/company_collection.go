@@ -1,28 +1,29 @@
 package entity
 
-type Company struct {
-	Name        string
-	PhoneNumber string
+type companyCollection struct {
+	companies map[string]Company
 }
 
-type CompanyCollection struct {
-	Companies []Company
+type CompanyCollection interface {
+	Add(key string, company Company)
+	Get() map[string]Company
+	Count() int
 }
 
-func (c *CompanyCollection) Add(company Company) {
-	c.Companies = append(c.Companies, company)
+func (c *companyCollection) Add(key string, company Company) {
+	c.companies[key] = company
 }
 
-func (c *CompanyCollection) Get() []Company {
-	return c.Companies
+func (c *companyCollection) Get() map[string]Company {
+	return c.companies
 }
 
-func (c *CompanyCollection) Count() int {
-	return len(c.Companies)
+func (c *companyCollection) Count() int {
+	return len(c.companies)
 }
 
-func NewCompanyCollection() *CompanyCollection {
-	return &CompanyCollection{
-		Companies: make([]Company, 0),
+func NewCompanyCollection() CompanyCollection {
+	return &companyCollection{
+		companies: map[string]Company{},
 	}
 }
