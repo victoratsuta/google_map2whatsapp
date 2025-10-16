@@ -183,6 +183,8 @@ This project is based on the [go-clean-template](https://github.com/evrone/go-cl
 
 ## 📋 TODO
 
+- [ ] Modify message and add link to google maps object, and name of company from google maps
+- [ ] Add all whatsapp contacts to particular group, associated with company + location for better filtering in whatsapp side 
 - [ ] Add tests
 - [ ] Check if we do pagination for search results, because now its maximum 2o companies per page
 - [ ] Add progress bar for message sending

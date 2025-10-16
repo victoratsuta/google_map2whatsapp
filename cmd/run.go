@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/victoratsuta/google_map2whatsapp/config"
+	"github.com/victoratsuta/google_map2whatsapp/internal/entity"
 )
 
 func Execute(container *config.Container) {
@@ -14,13 +15,17 @@ func Execute(container *config.Container) {
 	fmt.Println("\nThis program send messages through ur Whatsapp from Google Maps by provided location")
 	fmt.Println("\nLets first auth in ur Whatsapp, scan this QR with ur Whatsapp. This step could be skipped if u already logged in")
 
-	_ = container.GetWhatsAppService().Auth()
-
+	err := container.GetWhatsAppService().Auth()
+	if err != nil {
+		fmt.Printf("❌ Auth error: %v\n", err)
+		return
+	}
 	company := inputSearchingCompany()
 	location := inputSearchingLocation()
 
 	companies, _ := container.GetCompaniesRepository().GetByLocation(location + ", " + company)
 
+	printCompaniesDetails(companies)
 	fmt.Printf("Total found companies:  %d\n", companies.Count())
 
 	message := inputMessage()
@@ -28,10 +33,18 @@ func Execute(container *config.Container) {
 	fmt.Println(message)
 	fmt.Println("\nStarting sending messages to whatsapp")
 
-	err := container.GetWhatsAppService().SendToWhatsApp(companies, message)
+	err = container.GetWhatsAppService().SendToWhatsApp(companies, message)
 	if err != nil {
 		fmt.Printf("❌ SendToWhatsApp error: %v\n", err)
 		return
+	}
+}
+
+func printCompaniesDetails(companies entity.CompanyCollection) {
+	for _, company := range companies.Get() {
+		fmt.Println(company.Name())
+		fmt.Println(company.PhoneNumber())
+		fmt.Println("_________________")
 	}
 }
 
@@ -75,26 +88,21 @@ func inputSearchingLocation() string {
 
 func inputMessage() string {
 
-	var message = "Hi, how are u?"
-	var input string
-	fmt.Printf("Enter message to send (default: %s): ", message)
+	message := "Hi, how are u?"
+	fmt.Printf("Enter message to send (default: %s):\n", message)
+	fmt.Println("(Press Ctrl+D or Ctrl+Z on Windows to finish)")
 
 	scanner := bufio.NewScanner(os.Stdin)
-	var messageInputLines []string
+	var lines []string
 
 	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			break
-		}
-		messageInputLines = append(messageInputLines, line)
+		lines = append(lines, scanner.Text())
 	}
 
-	input = strings.Join(messageInputLines, "\n")
-
+	input := strings.Join(lines, "\n")
 	if input != "" {
 		message = input
 	}
-
 	return message
+
 }
