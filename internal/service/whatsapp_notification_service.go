@@ -17,29 +17,21 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
-type WhatsAppNotificationServiceInterface interface {
-	Auth() error
-	SendToWhatsApp(companies entity.CompanyCollection, message string) error
-}
-
 type WhatsAppNotificationService struct {
 	store     *sqlstore.Container
 	client    *whatsmeow.Client
-	ctx       *context.Context
 	clientLog *waLog.Logger
 }
 
 func NewWhatsAppNotificationService(
 	store *sqlstore.Container,
 	client *whatsmeow.Client,
-	ctx *context.Context,
 	clientLog *waLog.Logger,
 ) *WhatsAppNotificationService {
 
 	return &WhatsAppNotificationService{
 		store:     store,
 		client:    client,
-		ctx:       ctx,
 		clientLog: clientLog,
 	}
 }
@@ -66,7 +58,7 @@ func (s *WhatsAppNotificationService) SendToWhatsApp(companies entity.CompanyCol
 }
 
 func (s *WhatsAppNotificationService) handleNewLogin() error {
-	qrChan, _ := s.client.GetQRChannel(*s.ctx)
+	qrChan, _ := s.client.GetQRChannel(context.Background())
 	if err := s.client.Connect(); err != nil {
 		return fmt.Errorf("failed to connect: %w", err)
 	}
@@ -96,7 +88,7 @@ func (s *WhatsAppNotificationService) handleExistingSession(companies entity.Com
 		company := company
 
 		go func() {
-			if err := s.sendText(*s.ctx, s.client, message, company.PhoneNumber); err != nil {
+			if err := s.sendText(context.Background(), s.client, message, company.PhoneNumber()); err != nil {
 				fmt.Printf("Send failed to %s: %v\n", company.Name, err)
 			} else {
 				fmt.Printf("Message sent successfully to %s!\n", company.Name)
@@ -109,7 +101,6 @@ func (s *WhatsAppNotificationService) handleExistingSession(companies entity.Com
 }
 
 func (s *WhatsAppNotificationService) sendText(ctx context.Context, client *whatsmeow.Client, text string, phoneE164Digits string) error {
-
 	jid := types.NewJID(phoneE164Digits, types.DefaultUserServer)
 	msg := &waProto.Message{Conversation: &text}
 	_, err := client.SendMessage(ctx, jid, msg)
