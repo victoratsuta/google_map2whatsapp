@@ -6,6 +6,7 @@ import (
 
 	"github.com/victoratsuta/google_map2whatsapp/internal/repo"
 	"github.com/victoratsuta/google_map2whatsapp/internal/service"
+	"github.com/victoratsuta/google_map2whatsapp/pkg/google_maps"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -38,9 +39,14 @@ func NewContainer(config *Config) (*Container, error) {
 func (c *Container) initRepositories() error {
 
 	if c.config.App.Env == "prod" {
-		c.companiesRepo = repo.NewGoogleMapsCompaniesRepository(c.config.GoogleMap.ApiKey)
+		var googleMapsHttpApiClient google_maps.GoogleMapsApiClientInterface
+		googleMapsHttpApiClient = google_maps.NewGoogleMapsHttpApiClient(
+			c.config.GoogleMap.ApiKey,
+			"https://places.googleapis.com/v1/places:searchText",
+		)
+		c.companiesRepo = repo.NewGoogleMapsCompaniesRepository(googleMapsHttpApiClient)
 	} else {
-		c.companiesRepo = repo.NewCompaniesRepositoryStub(c.config.GoogleMap.ApiKey)
+		c.companiesRepo = repo.NewCompaniesRepositoryStub()
 	}
 
 	return nil
@@ -50,20 +56,18 @@ func (c *Container) initServices() error {
 
 	dbLog := waLog.Stdout("Database", c.config.Log.Level, true)
 	clientLog := waLog.Stdout("Client", c.config.Log.Level, true)
-	ctx := context.Background()
-	store, err := sqlstore.New(ctx, "sqlite3", "file:cache/examplestore.db?_foreign_keys=on", dbLog)
+	store, err := sqlstore.New(context.Background(), "sqlite3", "file:cache/examplestore.db?_foreign_keys=on", dbLog)
 
 	if err != nil {
 		panic(err)
 	}
 
-	deviceStore, _ := store.GetFirstDevice(ctx)
+	deviceStore, _ := store.GetFirstDevice(context.Background())
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
 	c.whatsappService = service.NewWhatsAppNotificationService(
 		store,
 		client,
-		&ctx,
 		&clientLog,
 	)
 	return nil

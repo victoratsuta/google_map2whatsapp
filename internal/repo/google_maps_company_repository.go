@@ -1,115 +1,68 @@
 package repo
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	"log"
 	"strings"
 
 	"github.com/victoratsuta/google_map2whatsapp/internal/entity"
+	"github.com/victoratsuta/google_map2whatsapp/pkg/google_maps"
 )
 
 type GoogleMapsCompaniesRepository struct {
-	googleMapsApiKey string
+	client google_maps.GoogleMapsApiClientInterface
 }
 
-type CompaniesRepositoryStub struct{}
-
-func NewGoogleMapsCompaniesRepository(googleMapsApiKey string) *GoogleMapsCompaniesRepository {
+func NewGoogleMapsCompaniesRepository(client google_maps.GoogleMapsApiClientInterface) *GoogleMapsCompaniesRepository {
 	return &GoogleMapsCompaniesRepository{
-		googleMapsApiKey: googleMapsApiKey,
+		client: client,
 	}
-}
-
-func NewCompaniesRepositoryStub(googleMapsApiKey string) *CompaniesRepositoryStub {
-	return &CompaniesRepositoryStub{}
-}
-
-type APIResponse struct {
-	Places []struct {
-		InternationalPhoneNumber string `json:"internationalPhoneNumber"`
-		DisplayName              struct {
-			Text         string `json:"text"`
-			LanguageCode string `json:"languageCode"`
-		} `json:"displayName"`
-	} `json:"places"`
 }
 
 func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.CompanyCollection, error) {
 
-	apiResponse, _ := getCompaniesFromGoogleMapsApi(
-		location,
-		"https://places.googleapis.com/v1/places:searchText",
-		r.googleMapsApiKey,
-	)
+	companies := entity.NewCompanyCollection()
+	pageToken := ""
+	currentIteration := 1
+	maxIterations := 10       // this is a safety limit of google maps api call per one search
+	minimumAllowedPlaces := 5 // If we got less than 5 places, we can assume that we reached the end of the list
 
-	var companies entity.CompanyCollection
-	for _, place := range apiResponse.Places {
-		companies.Add(
-			entity.Company{
-				Name:        place.DisplayName.Text,
-				PhoneNumber: strings.TrimPrefix(strings.ReplaceAll(place.InternationalPhoneNumber, " ", ""), "+"),
-			})
+	for {
+		request, err := google_maps.NewSearchPlaceRequest(location, pageToken)
+
+		if err != nil {
+			log.Fatalf("fatal error: %s", err)
+		}
+
+		response, err := r.client.SearchPlace(request)
+		if err != nil {
+			log.Fatalf("fatal error: %s", err)
+		}
+
+		for _, place := range response.Places {
+
+			company, err := entity.NewCompany(
+				place.DisplayName.Text,
+				strings.TrimPrefix(strings.ReplaceAll(place.InternationalPhoneNumber, " ", ""), "+"),
+				"stub",
+			)
+
+			if err != nil {
+				fmt.Println("Error during company creation from google maps response:")
+				fmt.Println(err.Error())
+				continue
+			}
+			companies.Add(place.Id, company)
+		}
+
+		if len(response.Places) < minimumAllowedPlaces || currentIteration >= maxIterations {
+			break
+		} else {
+			pageToken = response.NextPageToken
+			currentIteration++
+		}
+
 	}
 
 	return companies, nil
-}
-
-func getCompaniesFromGoogleMapsApi(location string, url string, googleMapsApiKey string) (APIResponse, error) {
-	requestBody := strings.NewReader(fmt.Sprintf(`{
-		"textQuery": "%s"
-	}`, location))
-
-	req, err := http.NewRequest("POST", url, requestBody)
-	if err != nil {
-		return APIResponse{}, fmt.Errorf("error creating request: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Goog-Api-Key", googleMapsApiKey)
-	req.Header.Set("X-Goog-FieldMask", "places.displayName,places.internationalPhoneNumber")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return APIResponse{}, fmt.Errorf("error making request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return APIResponse{}, fmt.Errorf("error reading response: %v", err)
-	}
-
-	// Check for non-200 status
-	if resp.StatusCode != http.StatusOK {
-		return APIResponse{}, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	// Parse JSON response
-	var apiResponse APIResponse
-	if err := json.Unmarshal([]byte(body), &apiResponse); err != nil {
-		return APIResponse{}, fmt.Errorf("error parsing JSON: %v", err)
-	}
-	return apiResponse, nil
-}
-
-func (r *CompaniesRepositoryStub) GetByLocation(location string) (entity.CompanyCollection, error) {
-
-	collection := entity.CompanyCollection{}
-
-	collection.Add(entity.Company{"Milan Tour Experts", "77054778117"})
-	collection.Add(entity.Company{"Italy Travel Pro", "77054778117"})
-	collection.Add(entity.Company{"Lombardy Adventures", "77054778117"})
-	collection.Add(entity.Company{"Duomo Tours", "77054778117"})
-	collection.Add(entity.Company{"La Scala Experiences", "77054778117"})
-	collection.Add(entity.Company{"Navigli Excursions", "77054778117"})
-	collection.Add(entity.Company{"Da Vinci Explorers", "77054778117"})
-	collection.Add(entity.Company{"Sforza Castle Tours", "77054778117"})
-	collection.Add(entity.Company{"Last Supper Visits", "77054778117"})
-	collection.Add(entity.Company{"Galleria Guides", "77054778117"})
-
-	return collection, nil
 }
