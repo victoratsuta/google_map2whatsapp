@@ -1,7 +1,7 @@
 package google_maps
 
 import (
-	"errors"
+	"fmt"
 )
 
 type searchPlaceRequest struct {
@@ -17,7 +17,7 @@ type SearchPlaceRequest interface {
 
 func NewSearchPlaceRequest(location string, pageToken string) (SearchPlaceRequest, error) {
 	if location == "" {
-		return nil, errors.New("location cannot be empty")
+		return nil, fmt.Errorf("location cannot be empty")
 	}
 
 	return &searchPlaceRequest{

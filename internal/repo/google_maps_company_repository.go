@@ -2,9 +2,9 @@ package repo
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/victoratsuta/google_map2whatsapp/internal/entity"
 	"github.com/victoratsuta/google_map2whatsapp/pkg/google_maps"
 )
@@ -31,12 +31,12 @@ func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.C
 		request, err := google_maps.NewSearchPlaceRequest(location, pageToken)
 
 		if err != nil {
-			log.Fatalf("fatal error: %s", err)
+			return nil, fmt.Errorf("call to google maps: %s", err)
 		}
 
 		response, err := r.client.SearchPlace(request)
 		if err != nil {
-			log.Fatalf("fatal error: %s", err)
+			return nil, fmt.Errorf("call to google maps: %s", err)
 		}
 
 		for _, place := range response.Places {
@@ -48,8 +48,7 @@ func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.C
 			)
 
 			if err != nil {
-				fmt.Println("Error during company creation from google maps response:")
-				fmt.Println(err.Error())
+				log.Warn().Err(err).Msg("Error during company creation from google maps response")
 				continue
 			}
 			companies.Add(place.Id, company)

@@ -56,13 +56,13 @@ func (c *Container) initServices() error {
 
 	dbLog := waLog.Stdout("Database", c.config.Log.Level, true)
 	clientLog := waLog.Stdout("Client", c.config.Log.Level, true)
-	store, err := sqlstore.New(context.Background(), "sqlite3", "file:cache/examplestore.db?_foreign_keys=on", dbLog)
+	store, err := sqlstore.New(context.TODO(), "sqlite3", "file:cache/examplestore.db?_foreign_keys=on", dbLog)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	deviceStore, _ := store.GetFirstDevice(context.Background())
+	deviceStore, _ := store.GetFirstDevice(context.TODO())
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
 	c.whatsappService = service.NewWhatsAppNotificationService(

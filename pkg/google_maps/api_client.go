@@ -40,7 +40,7 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 
 	req, err := http.NewRequest("POST", client.baseUrl, requestBody)
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error creating request: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error creating request to google maps search: %v", err)
 	}
 
 	req.Header.Set("X-Goog-Api-Key", client.googleMapsApiKey)
@@ -51,13 +51,12 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 	resp, err := httpClient.Do(req)
 
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error making request: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error making request to google maps search: %v", err)
 	}
-	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error reading response: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error reading response from to google maps search: %v", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -68,6 +67,12 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 	if err := json.Unmarshal(body, &apiResponse); err != nil {
 		return SearchPlaceResponse{}, fmt.Errorf("error parsing JSON: %v", err)
 	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		return SearchPlaceResponse{}, err
+	}
+
 	return apiResponse, nil
 
 }
