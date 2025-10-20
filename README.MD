@@ -142,8 +142,11 @@ Message sent successfully to Last Supper Visits!
 ├── config/          # Configuration management
 ├── internal/        # Core application code
 │   ├── entity/      # Business entities
-│   ├── repository/  # Data access layer
+│   ├── repo/        # Data access layer
 │   └── service/     # Business logic
+├── pkg/             # Shared libraries
+├── test/            # Unit tests
+├── .env             # Environment variables
 ├── .env.example    # Example environment variables
 └── main.go         # Application entry point
 ```
@@ -167,25 +170,14 @@ LOG_LEVEL=error
 GOOGLE_MAPS_API_KEY=your_api_key_here
 ```
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-This project is based on the [go-clean-template](https://github.com/evrone/go-clean-template) and uses [whatsmeow](https://github.com/tulir/whatsmeow) for WhatsApp Web interaction. Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 Changelog
-
-### [1.0.0] - 2025-10-06
-- Initial release
-- Basic functionality for finding businesses and sending WhatsApp messages
-
 ## 📋 TODO
 
+- [ ] Add logging to local dir
+- [ ] Add codestyle check and formatting, what are coding standards in Go?
+- [ ] Add docker wrapper
 - [ ] Modify message and add link to google maps object, and name of company from google maps
 - [ ] Add all whatsapp contacts to particular group, associated with company + location for better filtering in whatsapp side 
-- [ ] Add tests
-- [ ] Check if we do pagination for search results, because now its maximum 2o companies per page
+- [ ] Add tests for whatsapp interaction
 - [ ] Add progress bar for message sending
-- [ ] Implement proper error handling and retries
+- [ ] Explain test usage  go test -v ./test/...
+- [ ] Explain linter  errcheck ./...
