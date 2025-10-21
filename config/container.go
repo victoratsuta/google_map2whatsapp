@@ -25,9 +25,7 @@ func NewContainer(config *Config) (*Container, error) {
 		config: config,
 	}
 
-	if err := c.initRepositories(); err != nil {
-		return nil, fmt.Errorf("failed to initialize repositories: %w", err)
-	}
+	c.initRepositories()
 
 	if err := c.initServices(); err != nil {
 		return nil, fmt.Errorf("failed to initialize services: %w", err)
@@ -36,11 +34,9 @@ func NewContainer(config *Config) (*Container, error) {
 	return c, nil
 }
 
-func (c *Container) initRepositories() error {
-
+func (c *Container) initRepositories() {
 	if c.config.App.Env == "prod" {
-		var googleMapsHttpApiClient google_maps.GoogleMapsApiClientInterface
-		googleMapsHttpApiClient = google_maps.NewGoogleMapsHttpApiClient(
+		googleMapsHttpApiClient := google_maps.NewGoogleMapsHttpApiClient(
 			c.config.GoogleMap.ApiKey,
 			"https://places.googleapis.com/v1/places:searchText",
 		)
@@ -48,12 +44,9 @@ func (c *Container) initRepositories() error {
 	} else {
 		c.companiesRepo = repo.NewCompaniesRepositoryStub()
 	}
-
-	return nil
 }
 
 func (c *Container) initServices() error {
-
 	dbLog := waLog.Stdout("Database", c.config.Log.Level, true)
 	clientLog := waLog.Stdout("Client", c.config.Log.Level, true)
 	store, err := sqlstore.New(context.TODO(), "sqlite3", "file:cache/examplestore.db?_foreign_keys=on", dbLog)
@@ -68,7 +61,7 @@ func (c *Container) initServices() error {
 	c.whatsappService = service.NewWhatsAppNotificationService(
 		store,
 		client,
-		&clientLog,
+		clientLog,
 	)
 	return nil
 }

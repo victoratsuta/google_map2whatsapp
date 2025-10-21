@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	cfg := setupConfig()
 	container, _ := config.NewContainer(cfg)
 

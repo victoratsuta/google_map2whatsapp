@@ -20,7 +20,6 @@ func NewGoogleMapsCompaniesRepository(client google_maps.GoogleMapsApiClientInte
 }
 
 func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.CompanyCollection, error) {
-
 	companies := entity.NewCompanyCollection()
 	pageToken := ""
 	currentIteration := 1
@@ -31,16 +30,15 @@ func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.C
 		request, err := google_maps.NewSearchPlaceRequest(location, pageToken)
 
 		if err != nil {
-			return nil, fmt.Errorf("call to google maps: %s", err)
+			return nil, fmt.Errorf("call to google maps: %w", err)
 		}
 
 		response, err := r.client.SearchPlace(request)
 		if err != nil {
-			return nil, fmt.Errorf("call to google maps: %s", err)
+			return nil, fmt.Errorf("call to google maps: %w", err)
 		}
 
 		for _, place := range response.Places {
-
 			company, err := entity.NewCompany(
 				place.DisplayName.Text,
 				strings.TrimPrefix(strings.ReplaceAll(place.InternationalPhoneNumber, " ", ""), "+"),
@@ -60,8 +58,6 @@ func (r *GoogleMapsCompaniesRepository) GetByLocation(location string) (entity.C
 			pageToken = response.NextPageToken
 			currentIteration++
 		}
-
 	}
-
 	return companies, nil
 }

@@ -10,8 +10,7 @@ func NewCompaniesRepositoryStub() *CompaniesRepositoryStub {
 	return &CompaniesRepositoryStub{}
 }
 
-func (r *CompaniesRepositoryStub) GetByLocation(location string) (entity.CompanyCollection, error) {
-
+func (*CompaniesRepositoryStub) GetByLocation(_ string) (entity.CompanyCollection, error) {
 	collection := entity.NewCompanyCollection()
 
 	company, _ := entity.NewCompany("Milan Tour Experts", "77054778117", "test1.com")

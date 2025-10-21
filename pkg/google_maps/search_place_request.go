@@ -15,7 +15,7 @@ type SearchPlaceRequest interface {
 	HasPageToken() bool
 }
 
-func NewSearchPlaceRequest(location string, pageToken string) (SearchPlaceRequest, error) {
+func NewSearchPlaceRequest(location, pageToken string) (SearchPlaceRequest, error) {
 	if location == "" {
 		return nil, fmt.Errorf("location cannot be empty")
 	}

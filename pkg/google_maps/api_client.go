@@ -1,6 +1,7 @@
 package google_maps
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,7 +18,7 @@ type GoogleMapsHttpApiClient struct {
 	baseUrl          string
 }
 
-func NewGoogleMapsHttpApiClient(googleMapsApiKey string, baseUrl string) *GoogleMapsHttpApiClient {
+func NewGoogleMapsHttpApiClient(googleMapsApiKey, baseUrl string) *GoogleMapsHttpApiClient {
 	return &GoogleMapsHttpApiClient{
 		googleMapsApiKey: googleMapsApiKey,
 		baseUrl:          baseUrl,
@@ -25,8 +26,8 @@ func NewGoogleMapsHttpApiClient(googleMapsApiKey string, baseUrl string) *Google
 }
 
 func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceRequest) (SearchPlaceResponse, error) {
-
-	var fields = []string{
+	const itemsPerPage = 20
+	var fieldMask = []string{
 		"places.id",
 		"places.displayName",
 		"places.internationalPhoneNumber",
@@ -36,27 +37,27 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 		"textQuery": "%s",
 		"pageToken": "%s",
 		"pageSize" : "%d",
-	}`, searchPlace.Location(), searchPlace.PageToken(), 20))
+	}`, searchPlace.Location(), searchPlace.PageToken(), itemsPerPage))
 
-	req, err := http.NewRequest("POST", client.baseUrl, requestBody)
+	req, err := http.NewRequestWithContext(context.TODO(), "POST", client.baseUrl, requestBody)
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error creating request to google maps search: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error creating request to google maps search: %w", err)
 	}
 
 	req.Header.Set("X-Goog-Api-Key", client.googleMapsApiKey)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Goog-FieldMask", strings.Join(fields, ","))
+	req.Header.Set("X-Goog-FieldMask", strings.Join(fieldMask, ","))
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error making request to google maps search: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error making request to google maps search: %w", err)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error reading response from to google maps search: %v", err)
+		return SearchPlaceResponse{}, fmt.Errorf("error reading response from to google maps search: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -64,8 +65,8 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 	}
 
 	var apiResponse SearchPlaceResponse
-	if err := json.Unmarshal(body, &apiResponse); err != nil {
-		return SearchPlaceResponse{}, fmt.Errorf("error parsing JSON: %v", err)
+	if err = json.Unmarshal(body, &apiResponse); err != nil {
+		return SearchPlaceResponse{}, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	err = resp.Body.Close()
@@ -74,5 +75,4 @@ func (client *GoogleMapsHttpApiClient) SearchPlace(searchPlace SearchPlaceReques
 	}
 
 	return apiResponse, nil
-
 }

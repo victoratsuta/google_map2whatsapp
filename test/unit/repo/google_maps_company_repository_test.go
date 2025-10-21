@@ -11,7 +11,6 @@ import (
 )
 
 func TestGetByLocationSinglePage20Items(t *testing.T) {
-
 	body := generateJson(
 		[]map[string]string{
 			{"id": "1", "name": "Company", "number": "+790551234567"},
@@ -31,8 +30,7 @@ func TestGetByLocationSinglePage20Items(t *testing.T) {
 		t.Fatalf("error parsing JSON: %v", err)
 	}
 
-	var fc google_maps.GoogleMapsApiClientInterface
-	fc = &fakeClient{
+	fc := &fakeClient{
 		resps: []google_maps.SearchPlaceResponse{apiResponse},
 	}
 
@@ -49,7 +47,6 @@ func TestGetByLocationSinglePage20Items(t *testing.T) {
 }
 
 func TestGetByLocationMultiplePagesAndStopBecausePageBecomeTooShort(t *testing.T) {
-
 	bodies := [][]byte{
 		generateJson(
 			[]map[string]string{
@@ -93,8 +90,7 @@ func TestGetByLocationMultiplePagesAndStopBecausePageBecomeTooShort(t *testing.T
 		apiResponses = append(apiResponses, apiResponse)
 	}
 
-	var fc google_maps.GoogleMapsApiClientInterface
-	fc = &fakeClient{resps: apiResponses}
+	fc := &fakeClient{resps: apiResponses}
 
 	r := repo.NewGoogleMapsCompaniesRepository(fc)
 	companyCollection, err := r.GetByLocation("Firenze")
@@ -109,10 +105,8 @@ func TestGetByLocationMultiplePagesAndStopBecausePageBecomeTooShort(t *testing.T
 }
 
 func TestGetByLocationMultiplePagesAndStopThereAreTooManyIterations(t *testing.T) {
-
 	bodies := make([][]byte, 15)
-
-	for i := 0; i < 15; i++ {
+	for i := range 15 {
 		bodies[i] = generateJson(
 			[]map[string]string{
 				{"id": fmt.Sprintf("%d", i*10+1), "name": "Company", "number": "+790551234567"},
@@ -133,8 +127,7 @@ func TestGetByLocationMultiplePagesAndStopThereAreTooManyIterations(t *testing.T
 		apiResponses = append(apiResponses, apiResponse)
 	}
 
-	var fc google_maps.GoogleMapsApiClientInterface
-	fc = &fakeClient{resps: apiResponses}
+	fc := &fakeClient{resps: apiResponses}
 
 	r := repo.NewGoogleMapsCompaniesRepository(fc)
 	companyCollection, err := r.GetByLocation("Firenze")
@@ -149,7 +142,6 @@ func TestGetByLocationMultiplePagesAndStopThereAreTooManyIterations(t *testing.T
 }
 
 func generateJson(params []map[string]string) []byte {
-
 	var places []string
 	for _, param := range params {
 		places = append(
@@ -182,44 +174,10 @@ type fakeClient struct {
 	index int
 }
 
-func (f *fakeClient) SearchPlace(req google_maps.SearchPlaceRequest) (google_maps.SearchPlaceResponse, error) {
+func (f *fakeClient) SearchPlace(_ google_maps.SearchPlaceRequest) (google_maps.SearchPlaceResponse, error) {
 	r := f.resps[f.index]
 	if f.index < len(f.resps)-1 {
 		f.index++
 	}
 	return r, nil
 }
-
-//
-//func TestGetByLocation_TwoPages_SecondHas2Items_StopByMinimumAllowed(t *testing.T) {
-//	// first page: 20
-//	var p1 []google_maps.Place
-//	for index := 1; index <= 20; index++ {
-//		p1 = append(p1, mkPlace(placeID(index), companyName(index), "+39 055 1"+digit(index)))
-//	}
-//	// second page: 2 (below minAllowed=5) → repo must stop after this page
-//	p2 := []google_maps.Place{
-//		mkPlace("p-21", "Company 21", "+39 055 21"),
-//		mkPlace("p-22", "Company 22", "+39 055 22"),
-//	}
-//
-//	fc := &fakeClient{
-//		resps: []google_maps.SearchPlaceResponse{
-//			{Places: p1, NextPageToken: "token-1"},
-//			{Places: p2, NextPageToken: "token-2"}, // repo stops here because len(Places) < 5
-//			// even if we add a third page, it should never be called
-//		},
-//	}
-//
-//	r := repo.NewGoogleMapsCompaniesRepository(fc)
-//	got, err := r.GetByLocation("Firenze")
-//	if err != nil {
-//		t.Fatalf("unexpected error: %v", err)
-//	}
-//
-//	if got.Count() != 22 {
-//		t.Fatalf("expected 22 companies (20+2), got %d", got.Count())
-//	}
-//}
-
-// ---- tiny utils used above ----

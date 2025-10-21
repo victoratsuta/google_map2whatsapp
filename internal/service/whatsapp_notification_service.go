@@ -26,15 +26,14 @@ type messageSendReport struct {
 type WhatsAppNotificationService struct {
 	store     *sqlstore.Container
 	client    *whatsmeow.Client
-	clientLog *waLog.Logger
+	clientLog waLog.Logger
 }
 
 func NewWhatsAppNotificationService(
 	store *sqlstore.Container,
 	client *whatsmeow.Client,
-	clientLog *waLog.Logger,
+	clientLog waLog.Logger,
 ) *WhatsAppNotificationService {
-
 	return &WhatsAppNotificationService{
 		store:     store,
 		client:    client,
@@ -43,7 +42,6 @@ func NewWhatsAppNotificationService(
 }
 
 func (s *WhatsAppNotificationService) Auth() error {
-
 	if s.client.Store.ID == nil {
 		if err := s.handleNewQRScanLogin(); err != nil {
 			return fmt.Errorf("login to Whatsapp is failed: %w", err)
@@ -54,9 +52,7 @@ func (s *WhatsAppNotificationService) Auth() error {
 }
 
 func (s *WhatsAppNotificationService) SendToWhatsApp(companies entity.CompanyCollection, message string) error {
-
 	results := make(chan messageSendReport, len(companies.Get()))
-
 	if !s.client.IsConnected() {
 		if err := s.client.Connect(); err != nil {
 			return fmt.Errorf("failed to connect: %w", err)
@@ -71,7 +67,7 @@ func (s *WhatsAppNotificationService) SendToWhatsApp(companies entity.CompanyCol
 			if err := s.sendText(s.client, message, company.PhoneNumber()); err != nil {
 				results <- messageSendReport{
 					company: company.Name(),
-					err:     fmt.Errorf("Send failed to %s: %v\n", company.Name(), err),
+					err:     fmt.Errorf("send failed to %s: %w", company.Name(), err),
 				}
 			} else {
 				results <- messageSendReport{
@@ -81,12 +77,9 @@ func (s *WhatsAppNotificationService) SendToWhatsApp(companies entity.CompanyCol
 			}
 			wg.Done()
 		}()
-
 	}
-
 	wg.Wait()
 	close(results)
-
 	var errs []error
 	for r := range results {
 		if r.err != nil {
@@ -118,8 +111,7 @@ func (s *WhatsAppNotificationService) handleNewQRScanLogin() error {
 	return nil
 }
 
-func (s *WhatsAppNotificationService) sendText(client *whatsmeow.Client, text string, phoneE164Digits string) error {
-
+func (*WhatsAppNotificationService) sendText(client *whatsmeow.Client, text, phoneE164Digits string) error {
 	_, err := client.SendMessage(
 		context.TODO(),
 		types.NewJID(phoneE164Digits, types.DefaultUserServer),

@@ -11,7 +11,6 @@ import (
 )
 
 func Execute(container *config.Container) {
-
 	greetings()
 	whatsappAuth(container)
 
@@ -48,7 +47,6 @@ func greetings() {
 }
 
 func whatsappAuth(container *config.Container) {
-
 	color.Blue("Lets first auth in ur Whatsapp, scan this QR with ur Whatsapp. This step will be skipped if u already logged in")
 
 	err := container.GetWhatsAppService().Auth()
@@ -61,7 +59,6 @@ func whatsappAuth(container *config.Container) {
 }
 
 func printCompaniesDetails(companies entity.CompanyCollection) {
-
 	color.Green("Total found %d companies\n", companies.Count())
 	color.Green("Here is list of found companies\n")
 
@@ -113,7 +110,6 @@ func inputSearchingLocation() string {
 }
 
 func inputMessage() string {
-
 	message := "Hi, how are u?"
 	color.Blue("Enter message to send (default: %s):\n", message)
 	color.Blue("(Press Ctrl+D or Ctrl+Z on Windows to finish)")
