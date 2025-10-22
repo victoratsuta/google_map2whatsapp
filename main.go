@@ -10,7 +10,10 @@ import (
 
 func main() {
 	cfg := setupConfig()
-	container, _ := config.NewContainer(cfg)
+	container, err := config.NewContainer(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize container: %v", err)
+	}
 
 	cmd.Execute(container)
 }

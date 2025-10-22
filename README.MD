@@ -172,12 +172,7 @@ GOOGLE_MAPS_API_KEY=your_api_key_here
 
 ## 📋 TODO
 
-- [ ] Add logging to local dir
-- [ ] Add codestyle check and formatting, what are coding standards in Go?
-- [ ] Add docker wrapper
 - [ ] Modify message and add link to google maps object, and name of company from google maps
 - [ ] Add all whatsapp contacts to particular group, associated with company + location for better filtering in whatsapp side 
 - [ ] Add tests for whatsapp interaction
 - [ ] Add progress bar for message sending
-- [ ] Explain test usage  go test -v ./test/...
-- [ ] Explain  golangci-lint run --config=./.golangci.yaml ./...
